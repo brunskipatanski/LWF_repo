@@ -54,6 +54,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Assets\Content\Comments_info.cs" />
+    <Compile Include="Assets\Ins\Sprites\Wood\wood is missing one corner.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
