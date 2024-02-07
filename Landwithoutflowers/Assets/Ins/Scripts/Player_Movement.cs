@@ -2,20 +2,18 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    public float moveSpeed = 5f;        // Movement speed of the player
-    public float jumpForce = 10f;       // Force applied when jumping
-
-    private Rigidbody2D rb;             // Reference to the Rigidbody2D component
-    private PlayerControls controls;    // Reference to the PlayerControls script
+    public MovementParameters movementParams; // Reference to the movement parameters ScriptableObject
 
     // Start is called before the first frame update
     void Start()
     {
-        // Get reference to the Rigidbody2D component attached to the player GameObject
-        rb = GetComponent<Rigidbody2D>();
-
-        // Get reference to the PlayerControls script
-        controls = GetComponent<PlayerControls>();
+        // Get reference to the MovementParameters ScriptableObject
+        // This assumes you have assigned the MovementParameters asset in the Inspector
+        if (movementParams == null)
+        {
+            Debug.LogError("MovementParameters not assigned in PlayerMovement script.");
+            return;
+        }
     }
 
     // Update is called once per frame
@@ -32,19 +30,14 @@ public class PlayerMovement : MonoBehaviour
     private void HandleMovement()
     {
         // Move left
-        if (controls.IsLeftPressed())
+        if (Input.GetKey(KeyCode.A))
         {
-            rb.velocity = new Vector2(-moveSpeed, rb.velocity.y);
+            transform.Translate(Vector2.left * movementParams.moveSpeed * Time.deltaTime);
         }
         // Move right
-        else if (controls.IsRightPressed())
+        else if (Input.GetKey(KeyCode.D))
         {
-            rb.velocity = new Vector2(moveSpeed, rb.velocity.y);
-        }
-        // Stop movement if no input
-        else
-        {
-            rb.velocity = new Vector2(0f, rb.velocity.y);
+            transform.Translate(Vector2.right * movementParams.moveSpeed * Time.deltaTime);
         }
     }
 
@@ -52,10 +45,10 @@ public class PlayerMovement : MonoBehaviour
     private void HandleJumping()
     {
         // Check if the jump key is pressed and the player is grounded
-        if (controls.IsJumpPressed() && IsGrounded())
+        if (Input.GetKeyDown(KeyCode.W) && IsGrounded())
         {
             // Apply jump force
-            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+            GetComponent<Rigidbody2D>().AddForce(Vector2.up * movementParams.jumpForce, ForceMode2D.Impulse);
         }
     }
 

@@ -1,18 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class MovementParameters : MonoBehaviour
+[CreateAssetMenu(fileName = "MovementParameters", menuName = "ScriptableObjects/MovementParameters", order = 1)]
+public class MovementParameters : ScriptableObject
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    [Header("Movement Settings")]
+    public float moveSpeed = 1f;        // Movement speed of the player
+    public float jumpForce = 1000f;       // Force applied when jumping
 }
