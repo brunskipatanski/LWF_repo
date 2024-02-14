@@ -2,57 +2,65 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    public MovementParameters movementParams; // Reference to the movement parameters ScriptableObject
+    [SerializeField]
+    private MovementParameters movementParams; // Reference to the movement parameters MonoBehaviour
 
-    // Start is called before the first frame update
+    public PlayerControls controls; // Reference to the PlayerControls script
+
+    private Rigidbody2D rb;
+    private float currentVelocity = 0f;
+
     void Start()
     {
-        // Get reference to the MovementParameters ScriptableObject
-        // This assumes you have assigned the MovementParameters asset in the Inspector
-        if (movementParams == null)
-        {
-            Debug.LogError("MovementParameters not assigned in PlayerMovement script.");
-            return;
-        }
+        rb = GetComponent<Rigidbody2D>();
     }
 
-    // Update is called once per frame
     void Update()
     {
-        // Handle player movement
         HandleMovement();
-
-        // Handle player jumping
         HandleJumping();
     }
 
-    // Method to handle player movement
     private void HandleMovement()
     {
-        // Move left
-        if (Input.GetKey(KeyCode.A))
+        float moveInput = 0f;
+
+        // Check if left or right movement keys are pressed
+        if (controls.IsLeftPressed())
         {
-            transform.Translate(Vector2.left * movementParams.moveSpeed * Time.deltaTime);
+            moveInput = -1f; // Move left
         }
-        // Move right
-        else if (Input.GetKey(KeyCode.D))
+        else if (controls.IsRightPressed())
         {
-            transform.Translate(Vector2.right * movementParams.moveSpeed * Time.deltaTime);
+            moveInput = 1f; // Move right
         }
+
+        // Apply acceleration or deceleration based on move input
+        float targetVelocity = moveInput * movementParams.maxSpeed;
+        float acceleration = moveInput > 0 ? movementParams.acceleration : movementParams.deceleration;
+
+        // Apply turning acceleration if moving and turning in the opposite direction
+        if (Mathf.Sign(rb.velocity.x) != Mathf.Sign(moveInput) && Mathf.Abs(rb.velocity.x) > 0)
+        {
+            acceleration = movementParams.turningAcceleration;
+        }
+
+        currentVelocity = Mathf.MoveTowards(currentVelocity, targetVelocity, acceleration * Time.deltaTime);
+
+        // Update the player's velocity
+        rb.velocity = new Vector2(currentVelocity, rb.velocity.y);
     }
 
-    // Method to handle player jumping
     private void HandleJumping()
     {
         // Check if the jump key is pressed and the player is grounded
-        if (Input.GetKeyDown(KeyCode.W) && IsGrounded())
+        if (controls.IsJumpPressed() && IsGrounded())
         {
             // Apply jump force
-            GetComponent<Rigidbody2D>().AddForce(Vector2.up * movementParams.jumpForce, ForceMode2D.Impulse);
+            rb.AddForce(Vector2.up * movementParams.jumpForce, ForceMode2D.Impulse);
         }
     }
 
-    // Method to check if the player is grounded
     private bool IsGrounded()
     {
         // Perform a raycast downwards to check if there's ground beneath the player
