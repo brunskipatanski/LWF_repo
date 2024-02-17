@@ -8,7 +8,6 @@ public class PlayerMovement : MonoBehaviour
     public PlayerControls controls; // Reference to the PlayerControls script
 
     private Rigidbody2D rb;
-    private float currentVelocity = 0f;
 
     void Start()
     {
@@ -36,19 +35,26 @@ public class PlayerMovement : MonoBehaviour
         }
 
         // Apply acceleration or deceleration based on move input
-        float targetVelocity = moveInput * movementParams.maxSpeed;
-        float acceleration = moveInput > 0 ? movementParams.acceleration : movementParams.deceleration;
+        float acceleration = moveInput * movementParams.acceleration;
 
         // Apply turning acceleration if moving and turning in the opposite direction
         if (Mathf.Sign(rb.velocity.x) != Mathf.Sign(moveInput) && Mathf.Abs(rb.velocity.x) > 0)
         {
-            acceleration = movementParams.turningAcceleration;
+            acceleration = moveInput * movementParams.turningAcceleration;
         }
 
-        currentVelocity = Mathf.MoveTowards(currentVelocity, targetVelocity, acceleration * Time.deltaTime);
+        // Apply velocity directly
+        rb.velocity += new Vector2(acceleration * Time.deltaTime, 0f);
 
-        // Update the player's velocity
-        rb.velocity = new Vector2(currentVelocity, rb.velocity.y);
+        // Apply deceleration if not moving
+        if (Mathf.Approximately(moveInput, 0f))
+        {
+            float deceleration = Mathf.Sign(rb.velocity.x) * movementParams.deceleration;
+            rb.velocity -= new Vector2(deceleration * Time.deltaTime, 0f);
+        }
+
+        // Clamp velocity to max speed
+        rb.velocity = new Vector2(Mathf.Clamp(rb.velocity.x, -movementParams.maxSpeed, movementParams.maxSpeed), rb.velocity.y);
     }
 
     private void HandleJumping()
