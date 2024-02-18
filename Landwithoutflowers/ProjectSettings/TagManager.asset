@@ -8,6 +8,7 @@ TagManager:
   - Platfroms
   - Misc
   - HUD
+  - Platforms
   layers:
   - Default
   - TransparentFX
