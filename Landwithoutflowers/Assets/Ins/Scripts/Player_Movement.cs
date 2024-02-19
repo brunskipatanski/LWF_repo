@@ -1,20 +1,19 @@
 using UnityEngine;
+using System.Collections;
 
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField]
-    private MovementParameters movementParams; // Reference to the movement parameters MonoBehaviour
-
+    [SerializeField] private MovementParameters movementParams; // Reference to the movement parameters MonoBehaviour
     public PlayerControls controls; // Reference to the PlayerControls script
-
     private Rigidbody2D rb;
+    private bool clampEnabled = true; // Flag to track if clamping is enabled
 
-    void Start()
+    private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
     }
 
-    void Update()
+    private void Update()
     {
         HandleMovement();
         HandleJumping();
@@ -53,8 +52,11 @@ public class PlayerMovement : MonoBehaviour
             rb.velocity -= new Vector2(deceleration * Time.deltaTime, 0f);
         }
 
-        // Clamp velocity to max speed
-        rb.velocity = new Vector2(Mathf.Clamp(rb.velocity.x, -movementParams.maxSpeed, movementParams.maxSpeed), rb.velocity.y);
+        // Clamp velocity to max speed if enabled
+        if (clampEnabled)
+        {
+            rb.velocity = new Vector2(Mathf.Clamp(rb.velocity.x, -movementParams.maxSpeed, movementParams.maxSpeed), rb.velocity.y);
+        }
     }
 
     private void HandleJumping()
@@ -72,5 +74,21 @@ public class PlayerMovement : MonoBehaviour
         // Perform a raycast downwards to check if there's ground beneath the player
         RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 0.1f);
         return hit.collider != null;
+    }
+
+    private IEnumerator DisableClampTemporarily(float duration)
+    {
+        clampEnabled = false;
+        yield return new WaitForSeconds(duration);
+        clampEnabled = true;
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (IsGrounded())
+        {
+            StartCoroutine(DisableClampTemporarily(0.1f)); // Disable clamp for 0.1 seconds when colliding with the ground
+            Debug.Log("ground");
+        }
     }
 }
