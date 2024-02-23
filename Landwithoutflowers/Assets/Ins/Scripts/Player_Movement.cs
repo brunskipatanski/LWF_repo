@@ -7,6 +7,7 @@ public class PlayerMovement : MonoBehaviour
     public PlayerControls controls; // Reference to the PlayerControls script
     private Rigidbody2D rb;
     private bool clampEnabled = true; // Flag to track if clamping is enabled
+    private bool hasDoubleJumped = false; // Flag to track if the player has performed a double jump
 
     private void Start()
     {
@@ -61,18 +62,31 @@ public class PlayerMovement : MonoBehaviour
 
     private void HandleJumping()
     {
-        // Check if the jump key is pressed and the player is grounded
-        if (controls.IsJumpPressed() && IsGrounded())
+        // Check if the jump key is pressed and the player is grounded or has a double jump available
+        if (controls.IsJumpPressed() && (IsGrounded() || !hasDoubleJumped))
         {
-            // Apply jump force
-            rb.AddForce(Vector2.up * movementParams.jumpForce, ForceMode2D.Impulse);
+            // If grounded, perform a regular jump
+            if (IsGrounded())
+            {
+                rb.velocity = new Vector2(rb.velocity.x, 0f); // Reset vertical velocity
+                rb.AddForce(Vector2.up * movementParams.jumpForce, ForceMode2D.Impulse);
+                Debug.Log("Regular Jump");
+            }
+            // If not grounded and has a double jump available, perform a double jump
+            else if (!IsGrounded() && !hasDoubleJumped)
+            {
+                rb.velocity = new Vector2(rb.velocity.x, 0f); // Reset vertical velocity
+                rb.AddForce(Vector2.up * movementParams.jumpForce, ForceMode2D.Impulse);
+                hasDoubleJumped = true; // Set the flag to indicate that the double jump has been used
+                Debug.Log("Double Jump");
+            }
         }
     }
 
     private bool IsGrounded()
     {
         // Perform a raycast downwards to check if there's ground beneath the player
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 0.1f);
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 1.1f, LayerMask.GetMask("Platforms"));
         return hit.collider != null;
     }
 
@@ -82,13 +96,16 @@ public class PlayerMovement : MonoBehaviour
         yield return new WaitForSeconds(duration);
         clampEnabled = true;
     }
-
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (IsGrounded())
+        if (collision.collider.CompareTag("Platforms"))
         {
-            StartCoroutine(DisableClampTemporarily(0.1f)); // Disable clamp for 0.1 seconds when colliding with the ground
-            Debug.Log("ground");
+            if (collision.gameObject.GetComponent<Collider2D>().GetType() == typeof(BoxCollider2D))
+            {
+                StartCoroutine(DisableClampTemporarily(0.1f)); // Disable clamp for 0.1 seconds when colliding with the ground
+                Debug.Log("Grounded");
+                hasDoubleJumped = false; // Reset the double jump flag when grounded
+            }
         }
     }
 }

@@ -9,5 +9,9 @@ public class MovementParameters : MonoBehaviour
     public float deceleration = 10f;       // Deceleration of the player
     public float turningAcceleration = 5f; // Acceleration when turning while moving
 
+    [Header("Double Jump Settings")]
+    public bool canDoubleJump = true;      // Determines if the player can double jump
+    public float doubleJumpForce = 7f;     // Force applied during double jump
+
     // Add more parameters as needed
 }
